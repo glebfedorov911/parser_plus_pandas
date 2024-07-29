@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "train-pandas"
+version = "0.1.0"
+description = ""
+authors = ["gfedorov911 <fedorov22134@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+pandas = "^2.2.2"
+openpyxl = "^3.1.5"
+playwright = "^1.45.1"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
