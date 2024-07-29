@@ -39,6 +39,15 @@ total = 0
 proxies_count = len(proxies)
 all_data = []
 
+def create(df_to_list):
+    brands = []
+    nums = []
+    for i in df_to_list:
+        brands.append((df_to_list.index(i), i[2]))
+        nums.append((df_to_list.index(i), i[3]))
+    
+    return brands, nums
+
 def split_file_for_thr(num: int, url: list) -> list[list]:
     '''
     num - число потоков # например 4
@@ -208,7 +217,6 @@ def run(brands, nums):
 
 # brands = ["Peugeot---Citroen", "Mahle---Knecht", "Peugeot---Citroen", "Peugeot---Citroen", "Peugeot---Citroen", "Peugeot---Citroen", "ГАЗ", "VAG", "Autocomponent"] * 20
 # nums = ["82026", "02943N0", "362312", "00004254A2", "00006426YN", "00008120T7", "6270000290", "016409399B", "01М21С9"] * 20
-from main import create
 
 df = pd.read_excel("file.xlsx")
 
