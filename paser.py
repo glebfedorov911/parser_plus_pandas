@@ -15,7 +15,6 @@ start = time.perf_counter()
 
 proxies = [
     ["http://46.8.16.194:1050", "LorNNF", "fr4B7cGdyS"],
-    # ["http://95.182.124.119:1050", "2Q3n1o", "FjvCaesiwS"], #!!!!
     ["http://194.156.123.115:1050", "LorNNF", "fr4B7cGdyS"],
     ["http://109.248.166.189:1050", "LorNNF", "fr4B7cGdyS"],
     ["http://91.188.244.80:1050", "LorNNF", "fr4B7cGdyS"],
@@ -120,7 +119,8 @@ async def main(brands, nums):
                 brands.append(brand)
                 nums.append(num)
                 
-                atms_proxy[proxy[0]] += 1
+                if proxy[0] in atms_proxy:
+                    atms_proxy[proxy[0]] += 1
                 if atms_proxy[proxy[0]] > 7:
                     if proxy not in ban_list:
                         ban_list.append(proxy)
@@ -137,7 +137,9 @@ async def main(brands, nums):
             response = dict(json.loads(pre))
 
             if "originals" not in response["searchResult"]:
-                atms_proxy[proxy[0]] += 1
+                all_data.append([brand[1], num[1], 'ТОВАР', "НЕ", "ДОСТУПЕН"])
+                #  if proxy[0] in atms_proxy:
+                #     atms_proxy[proxy[0]] += 1
                 continue
 
             originals = response["searchResult"]["originals"]
@@ -179,7 +181,8 @@ async def main(brands, nums):
                     except IndexError:
                         break
                     except playwright_TimeoutError:
-                        atms_proxy[proxy[0]] += 1
+                        if proxy[0] in atms_proxy:
+                            atms_proxy[proxy[0]] += 1
                         brands.append(brand)
                         nums.append(num)
                         skip = True
@@ -240,4 +243,4 @@ df = pd.DataFrame(all_data, columns=["Артикул", "Номер товара"
 df.to_excel("file(2).xlsx", index=False)
 
 with open('data.txt', 'a', encoding="utf-8") as file:
-    file.write(f"ВСЕГО: {total} строк\nБан лист: {ban_list}\nПопытки: {atms_proxy}\nСкорость: {total/(time.perf_counter() - start)} строк/секунд\nСтраница время: {(time.perf_counter() - start)/len(all_data)}\n{time.perf_counter() - start} секунд\n")
+    file.write(f"ВСЕГО: {total} строк\nБан лист: {ban_list}\nПопытки: {atms_proxy}\nСкорость: {total/(time.perf_counter() - start)} строк/секунд\nСтраница время: {(time.perf_counter() - start)/len(all_data)}\n{time.perf_counter() - start} секунд\n\n")
