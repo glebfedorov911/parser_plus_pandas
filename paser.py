@@ -1,13 +1,11 @@
 from playwright.async_api import async_playwright, TimeoutError as playwright_TimeoutError
-import pandas as pd
 
 import asyncio
 import json
 import time 
-import random
 import threading
-
 import urllib.parse as up
+import pandas as pd
 
 from math import ceil
 
@@ -32,11 +30,11 @@ proxies = [
     ["http://188.130.128.166:1050", "LorNNF", "fr4B7cGdyS"],
 ] 
 
-atms_proxy = {}
-ban_list = []
-total = 0
-proxies_count = len(proxies)
-all_data = []
+atms_proxy = {} # в словарь
+ban_list = [] # в словарь
+total = 0 # в словарь
+proxies_count = len(proxies) # в словарь
+all_data = [] # в словарь
 
 def create(df_to_list):
     brands = []
@@ -89,19 +87,19 @@ def quick_sort(arr: list, index: int):
 
 async def main(brands, nums):
     global proxies, atms_proxy, ban_list, total, proxies_count, all_data
-    proxy = proxies.pop(0)
+    proxy = proxies.pop(0) # в словарь
 
     for brand, num in zip(brands, nums):
-        if proxy[0] not in atms_proxy:
-            atms_proxy[proxy[0]] = 0
+        if proxy[0] not in atms_proxy: # в словарь
+            atms_proxy[proxy[0]] = 0 # в словарь
 
-        if atms_proxy[proxy[0]] > 7:
-            if proxy not in ban_list:
-                ban_list.append(proxy)
-            if proxy in proxies:
-                proxies.remove(proxy)
-            if len(ban_list) == proxies_count:
-                print("У вас закончились прокси")
+        if atms_proxy[proxy[0]] > 7: # в словарь
+            if proxy not in ban_list: # в словарь
+                ban_list.append(proxy) # в словарь
+            if proxy in proxies: # в словарь
+                proxies.remove(proxy) # в словарь
+            if len(ban_list) == proxies_count: # в словарь
+                print("У вас закончились прокси") 
                 break
             if proxies != []:
                 proxy = proxies.pop(0)
