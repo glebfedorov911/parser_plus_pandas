@@ -216,6 +216,3 @@ for thread in threadings:
 
 print("Бан лист:", ban_list)
 print(time.perf_counter()-start)
-
-#c лого 27 строк за 168 секунд - 6.22
-#без лого фулл комплектация 27 строк за 15 секунд - 0.56
