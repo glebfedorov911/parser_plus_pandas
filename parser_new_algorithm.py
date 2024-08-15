@@ -2,6 +2,7 @@ import threading
 import asyncio
 import urllib.parse as up
 import json
+import time
 
 from playwright.async_api import async_playwright
 
@@ -30,84 +31,142 @@ def quick_sort(arr: list, index: int):
         right = [x for x in arr if x[index] > pivot]
         return quick_sort(left, index) + middle + quick_sort(right, index)
 
-async def main(brands, nums):    
+PROXY_LIST = [
+    ["http://46.8.16.194:1050", "LorNNF", "fr4B7cGdyS"],
+    ["http://46.8.22.63:1050", "LorNNF", "fr4B7cGdyS"],
+    ["http://109.248.14.248:1050", "LorNNF", "fr4B7cGdyS"],
+    ["http://2.59.50.242:1050", "LorNNF", "fr4B7cGdyS"],
+    ["http://94.158.190.152:1050", "LorNNF", "fr4B7cGdyS"],
+    ["http://188.130.129.128:1050", "LorNNF", "fr4B7cGdyS"],
+    ["http://31.40.203.252:1050", "LorNNF", "fr4B7cGdyS"],
+    ["http://45.15.73.112:1050", "LorNNF", "fr4B7cGdyS"],
+    ["http://46.8.157.208:1050", "LorNNF", "fr4B7cGdyS"],
+    ["http://188.130.128.166:1050", "LorNNF", "fr4B7cGdyS"],
+    ["http://194.156.97.212:1050", "LorNNF", "fr4B7cGdyS"],
+    ["http://194.156.123.115:1050", "LorNNF", "fr4B7cGdyS"],
+    ["http://109.248.166.189:1050", "LorNNF", "fr4B7cGdyS"],
+    ["http://91.188.244.80:1050", "LorNNF", "fr4B7cGdyS"],
+    ["http://193.58.168.161:1050", "LorNNF", "fr4B7cGdyS"],
+]
+
+ban_list = []
+
+async def main(brands, nums):   
+    global PROXY_LIST, ban_list
+
     DEEP_FILTER = 10
     DEEP_ANALOG = 10
-    ANALOG = True
+    ANALOG = False
     IS_BIGGER = None #True - больше False - меньше None - не указано
     DATE = 5
+    LOGO = "HXAW" #QFPD - пример лого None - Без лого
+    
+    proxy = PROXY_LIST.pop(0)
     for brand, num in zip(brands, nums):
         url = f"https://emex.ru/api/search/search?make={create_params_for_url(brand)}&detailNum={num}&locationId=38760&showAll=true&longitude=37.8613&latitude=55.7434"
         async with async_playwright() as p:
-            browser = await p.chromium.launch(headless=False, proxy={"server": "http://193.58.168.161:1050", "username": "LorNNF", "password": "fr4B7cGdyS"})
-            page = await browser.new_page()
-
             try:
-                await page.goto(url, timeout=3000)
-            except:
-                await page.goto(url, timeout=3000)
+                browser = await p.chromium.launch(headless=False, proxy={"server": proxy[0], "username": proxy[1], "password": proxy[2]})
+                page = await browser.new_page()
 
-            pre = await (await page.query_selector("pre")).text_content()
-            response = dict(json.loads(pre))
-            originals = []
+                try:
+                    await page.goto(url, timeout=1500)
+                except:
+                    await page.goto(url, timeout=1500)
 
-            if IS_BIGGER is None:
-                if "originals" in response["searchResult"]:
-                    originals += [[goods["offerKey"], int(str(goods["delivery"]["value"]).replace("Завтра", "1")), goods["displayPrice"]["value"], goods["data"]["maxQuantity"]["value"]] for orig in response["searchResult"]["originals"] for goods in orig["offers"]]
+                pre = await (await page.query_selector("pre")).text_content()
+                response = dict(json.loads(pre))
+                originals = []
+
+                if IS_BIGGER is None:
+                    if "originals" in response["searchResult"]:
+                        originals += [[goods["offerKey"], int(str(goods["delivery"]["value"]).replace("Завтра", "1")), goods["displayPrice"]["value"], goods["data"]["maxQuantity"]["value"]] for orig in response["searchResult"]["originals"] for goods in orig["offers"]]
+                    else:
+                        print("Товара нет в наличие")
+                        continue
+
+                    if "replacements" in response["searchResult"]:
+                        originals += [[goods["offerKey"], int(str(goods["delivery"]["value"]).replace("Завтра", "1")), goods["displayPrice"]["value"], goods["data"]["maxQuantity"]["value"]] for repl in response["searchResult"]["replacements"] for goods in repl["offers"]]
+
+                    if ANALOG and "analogs" in response["searchResult"]:
+                        originals += [[goods["offerKey"], int(str(goods["delivery"]["value"]).replace("Завтра", "1")), goods["displayPrice"]["value"], goods["data"]["maxQuantity"]["value"]] for anal in response["searchResult"]["analogs"][:DEEP_ANALOG] for goods in anal["offers"]]
                 else:
-                    print("Товара нет в наличие")
-                    continue
-
-                if "replacements" in response["searchResult"]:
-                    originals += [[goods["offerKey"], int(str(goods["delivery"]["value"]).replace("Завтра", "1")), goods["displayPrice"]["value"], goods["data"]["maxQuantity"]["value"]] for repl in response["searchResult"]["replacements"] for goods in repl["offers"]]
-
-                if ANALOG and "analogs" in response["searchResult"]:
-                    originals += [[goods["offerKey"], int(str(goods["delivery"]["value"]).replace("Завтра", "1")), goods["displayPrice"]["value"], goods["data"]["maxQuantity"]["value"]] for anal in response["searchResult"]["analogs"][:DEEP_ANALOG] for goods in anal["offers"]]
-            else:
-                if "originals" in response["searchResult"]:
-                    if IS_BIGGER:
-                        originals += [[goods["offerKey"], int(str(goods["delivery"]["value"]).replace("Завтра", "1")), goods["displayPrice"]["value"], goods["data"]["maxQuantity"]["value"]] if int(str(goods["delivery"]["value"]).replace("Завтра", "1")) >= DATE else False for orig in response["searchResult"]["originals"] for goods in orig["offers"]]
+                    if "originals" in response["searchResult"]:
+                        if IS_BIGGER:
+                            originals += [[goods["offerKey"], int(str(goods["delivery"]["value"]).replace("Завтра", "1")), goods["displayPrice"]["value"], goods["data"]["maxQuantity"]["value"]] if int(str(goods["delivery"]["value"]).replace("Завтра", "1")) >= DATE else False for orig in response["searchResult"]["originals"] for goods in orig["offers"]]
+                        else:
+                            originals += [[goods["offerKey"], int(str(goods["delivery"]["value"]).replace("Завтра", "1")), goods["displayPrice"]["value"], goods["data"]["maxQuantity"]["value"]] if int(str(goods["delivery"]["value"]).replace("Завтра", "1")) <= DATE else False for orig in response["searchResult"]["originals"] for goods in orig["offers"]]
                     else:
-                        originals += [[goods["offerKey"], int(str(goods["delivery"]["value"]).replace("Завтра", "1")), goods["displayPrice"]["value"], goods["data"]["maxQuantity"]["value"]] if int(str(goods["delivery"]["value"]).replace("Завтра", "1")) <= DATE else False for orig in response["searchResult"]["originals"] for goods in orig["offers"]]
-                else:
-                    print("Товара нет в наличие")
-                    continue
+                        print("Товара нет в наличие")
+                        continue
 
-                if "replacements" in response["searchResult"]:
-                    if IS_BIGGER:
-                        originals += [[goods["offerKey"], int(str(goods["delivery"]["value"]).replace("Завтра", "1")), goods["displayPrice"]["value"], goods["data"]["maxQuantity"]["value"]] if int(str(goods["delivery"]["value"]).replace("Завтра", "1")) >= DATE else False for orig in response["searchResult"]["replacements"] for goods in orig["offers"]]
-                    else:
-                        originals += [[goods["offerKey"], int(str(goods["delivery"]["value"]).replace("Завтра", "1")), goods["displayPrice"]["value"], goods["data"]["maxQuantity"]["value"]] if int(str(goods["delivery"]["value"]).replace("Завтра", "1")) <= DATE else False for orig in response["searchResult"]["replacements"] for goods in orig["offers"]]
+                    if "replacements" in response["searchResult"]:
+                        if IS_BIGGER:
+                            originals += [[goods["offerKey"], int(str(goods["delivery"]["value"]).replace("Завтра", "1")), goods["displayPrice"]["value"], goods["data"]["maxQuantity"]["value"]] if int(str(goods["delivery"]["value"]).replace("Завтра", "1")) >= DATE else False for orig in response["searchResult"]["replacements"] for goods in orig["offers"]]
+                        else:
+                            originals += [[goods["offerKey"], int(str(goods["delivery"]["value"]).replace("Завтра", "1")), goods["displayPrice"]["value"], goods["data"]["maxQuantity"]["value"]] if int(str(goods["delivery"]["value"]).replace("Завтра", "1")) <= DATE else False for orig in response["searchResult"]["replacements"] for goods in orig["offers"]]
 
-                if ANALOG and "analogs" in response["searchResult"]:
-                    if IS_BIGGER:
-                        originals += [[goods["offerKey"], int(str(goods["delivery"]["value"]).replace("Завтра", "1")), goods["displayPrice"]["value"], goods["data"]["maxQuantity"]["value"]] if int(str(goods["delivery"]["value"]).replace("Завтра", "1")) >= DATE else False for orig in response["searchResult"]["analogs"][:DEEP_ANALOG] for goods in orig["offers"]]
-                    else:
-                        originals += [[goods["offerKey"], int(str(goods["delivery"]["value"]).replace("Завтра", "1")), goods["displayPrice"]["value"], goods["data"]["maxQuantity"]["value"]] if int(str(goods["delivery"]["value"]).replace("Завтра", "1")) <= DATE else False for orig in response["searchResult"]["analogs"][:DEEP_ANALOG] for goods in orig["offers"]]
+                    if ANALOG and "analogs" in response["searchResult"]:
+                        if IS_BIGGER:
+                            originals += [[goods["offerKey"], int(str(goods["delivery"]["value"]).replace("Завтра", "1")), goods["displayPrice"]["value"], goods["data"]["maxQuantity"]["value"]] if int(str(goods["delivery"]["value"]).replace("Завтра", "1")) >= DATE else False for orig in response["searchResult"]["analogs"][:DEEP_ANALOG] for goods in orig["offers"]]
+                        else:
+                            originals += [[goods["offerKey"], int(str(goods["delivery"]["value"]).replace("Завтра", "1")), goods["displayPrice"]["value"], goods["data"]["maxQuantity"]["value"]] if int(str(goods["delivery"]["value"]).replace("Завтра", "1")) <= DATE else False for orig in response["searchResult"]["analogs"][:DEEP_ANALOG] for goods in orig["offers"]]
+                    
+                    originals = [data for data in originals if data]
+
+                sorted_data_by_date = quick_sort(originals, 1)
+                cut_data_by_date = sorted_data_by_date[:len(sorted_data_by_date)//2+1]
+
+                sorted_data_by_availability = quick_sort(cut_data_by_date, 3)
+                cut_data_by_availability = sorted_data_by_availability[-DEEP_FILTER:]
+
+                best_data = min(cut_data_by_availability, key=lambda x: x[2])
+
+                try:
+                    await page.goto(f"https://emex.ru/api/search/rating?offerKey={best_data[0]}", timeout=1500)
+                except:
+                    await page.goto(f"https://emex.ru/api/search/rating?offerKey={best_data[0]}", timeout=1500)
+
+                pre_with_logo = await (await page.query_selector("pre")).text_content()
+                response_with_logo = dict(json.loads(pre_with_logo))
+                price_logo = response_with_logo["priceLogo"] 
+
+                result = [price_logo, *best_data[1:]]
+                print(result)
                 
-                originals = [data for data in originals if data]
+                if LOGO:
+                    final_result = []
+                    cut_data_by_availability = sorted_data_by_date
+                    for data in cut_data_by_availability:
+                        try:
+                            await page.goto(f"https://emex.ru/api/search/rating?offerKey={data[0]}", timeout=1500)
+                        except:
+                            cut_data_by_availability.append(data)
+                            continue
 
-            sorted_data_by_date = quick_sort(originals, 1)
-            cut_data_by_date = sorted_data_by_date[:len(sorted_data_by_date)//2+1]
+                        pre_with_logo = await (await page.query_selector("pre")).text_content()
+                        response_with_logo = dict(json.loads(pre_with_logo))
+                        price_logo = response_with_logo["priceLogo"] 
 
-            sorted_data_by_availability = quick_sort(cut_data_by_date, 3)
-            cut_data_by_availability = sorted_data_by_availability[-DEEP_FILTER:]
+                        data[0] = price_logo
+                        if price_logo == LOGO:
+                            final_result.append(data)
 
-            best_data = min(cut_data_by_availability, key=lambda x: x[2])
-
-            try:
-                await page.goto(f"https://emex.ru/api/search/rating?offerKey={best_data[0]}", timeout=3000)
+                    if final_result:
+                        best_data = min(final_result, key=lambda x: x[2])
+                        print(best_data)
+                    else:
+                        print("Нет такого лого среди оригиналов")
             except:
-                await page.goto(f"https://emex.ru/api/search/rating?offerKey={best_data[0]}", timeout=3000)
+                ban_list.append(proxy)
+                proxy = PROXY_LIST.pop(0)
+    PROXY_LIST.append(proxy)
+        
 
-            pre_with_logo = await (await page.query_selector("pre")).text_content()
-            response_with_logo = dict(json.loads(pre_with_logo))
-            price_logo = response_with_logo["priceLogo"] 
+brands = ["peugeot---citroen", "ГАЗ", "peugeot---citroen", "peugeot---citroen", "peugeot---citroen", "peugeot---citroen", "Mahle---Knecht"] * 3
+nums = ["82026", "6270000290", "00008120T7", "00006426YN", "00004254A2", "362312", "02943N0"] * 3
 
-            result = [price_logo, *best_data[1:]]
-            print(result)
-
-brands = ["peugeot+%2F+citroen"]
-nums = ["00004254A2"]
-
+start = time.perf_counter()
 asyncio.run(main(brands, nums))
+print("Бан лист:", ban_list)
+print(time.perf_counter()-start)
