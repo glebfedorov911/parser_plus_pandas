@@ -75,10 +75,10 @@ async def main(brands, nums):
 
     DEEP_FILTER = 50
     DEEP_ANALOG = 50
-    ANALOG = False
+    ANALOG = True
     IS_BIGGER = True #True - больше False - меньше None - не указано
     DATE = 5
-    LOGO = "HXAW" #HXAW - пример лого None - Без лого
+    LOGO = None #HXAW - пример лого None - Без лого
     
     if PROXY_LIST != []:
         proxy = PROXY_LIST.pop(0)
@@ -216,3 +216,34 @@ for thread in threadings:
 
 print("Бан лист:", ban_list)
 print(time.perf_counter()-start)
+
+
+# -=-=-=-=-
+    # DEEP_FILTER = 50
+    # DEEP_ANALOG = 50
+    # ANALOG = False
+    # IS_BIGGER = True #True - больше False - меньше None - не указано
+    # DATE = 5
+    # LOGO = None #HXAW - пример лого None - Без лого
+    #
+    # 18 строк за 12.4 секунды
+# -=-=-=-=-
+    # DEEP_FILTER = 50
+    # DEEP_ANALOG = 50
+    # ANALOG = True
+    # IS_BIGGER = True #True - больше False - меньше None - не указано
+    # DATE = 5
+    # LOGO = None #HXAW - пример лого None - Без лого
+    # 
+    #  18 строк за 11.0 секунд
+# -=-=-=-=-
+    # DEEP_FILTER = 50
+    # DEEP_ANALOG = 50
+    # ANALOG = False
+    # IS_BIGGER = True #True - больше False - меньше None - не указано
+    # DATE = 5
+    # LOGO = "HXAW" #HXAW - пример лого None - Без лого
+    #
+    # 18 строк за 145.4 секунды
+# -=-=-=-=-
+    # Среднее 1) 0.7 2) 0.61 3) 8.1
