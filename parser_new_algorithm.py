@@ -67,10 +67,11 @@ PROXY_LIST = [
     ["http://193.58.168.161:1050", "LorNNF", "fr4B7cGdyS"],
 ]
 
-ban_list = []
+len_proxy_list = len(PROXY_LIST)
+ban_list = set()
 
 async def main(brands, nums):   
-    global PROXY_LIST, ban_list
+    global PROXY_LIST, ban_list, len_proxy_list
 
     DEEP_FILTER = 50
     DEEP_ANALOG = 50
@@ -79,8 +80,15 @@ async def main(brands, nums):
     DATE = 5
     LOGO = "HXAW" #HXAW - пример лого None - Без лого
     
-    proxy = PROXY_LIST.pop(0)
+    if PROXY_LIST != []:
+        proxy = PROXY_LIST.pop(0)
+    else:
+        proxy = ["http://test:8888", "user1", "pass1"]
     for brand, num in zip(brands, nums):
+        if len_proxy_list == len(ban_list):
+            print("Закончились все прокси")
+            break
+
         url = f"https://emex.ru/api/search/search?make={create_params_for_url(brand)}&detailNum={num}&locationId=38760&showAll=true&longitude=37.8613&latitude=55.7434"
         async with async_playwright() as p:
             try:
@@ -150,7 +158,7 @@ async def main(brands, nums):
                 price_logo = response_with_logo["priceLogo"] 
 
                 result = [price_logo, *best_data[1:]]
-                print(result)
+                print(num, result)
                 
                 if LOGO:
                     final_result = []
@@ -172,12 +180,18 @@ async def main(brands, nums):
 
                     if final_result:
                         best_data = min(final_result, key=lambda x: x[2])
-                        print(best_data)
+                        print(num, best_data)
                     else:
-                        print("Нет такого лого среди оригиналов")
+                        print(num, "Нет такого лого среди оригиналов")
             except:
-                ban_list.append(proxy)
-                proxy = PROXY_LIST.pop(0)
+                brands.append(brand)
+                nums.append(num)
+                if proxy != ["http://test:8888", "user1", "pass1"]:
+                    ban_list.add("@".join(proxy))
+                if PROXY_LIST != []:
+                    proxy = PROXY_LIST.pop(0)
+                else:
+                    proxy = ["http://test:8888", "user1", "pass1"]
     PROXY_LIST.append(proxy)
         
 def run(brands, nums):
@@ -185,10 +199,10 @@ def run(brands, nums):
 
 
 start = time.perf_counter()
-brands = ["peugeot---citroen", "ГАЗ", "peugeot---citroen", "peugeot---citroen", "peugeot---citroen", "peugeot---citroen", "Mahle---Knecht", "VAG", "Autocomponent"] * 3
-nums = ["82026", "6270000290", "00008120T7", "00006426YN", "00004254A2", "362312", "02943N0", "016409399B", "01М21С9"] * 3
+brands = ["peugeot---citroen", "ГАЗ", "peugeot---citroen", "peugeot---citroen", "peugeot---citroen", "peugeot---citroen", "Mahle---Knecht", "VAG", "Autocomponent"] * 2
+nums = ["82026", "6270000290", "00008120T7", "00006426YN", "00004254A2", "362312", "02943N0", "016409399B", "01М21С9"] * 2 
 
-brands_split = split_file_for_thr(4, brands)
+brands_split = split_file_for_thr(4, brands) # 4 - количество потоков
 nums_split = split_file_for_thr(4, nums)
 
 threadings = []
