@@ -6,6 +6,24 @@ import time
 
 from playwright.async_api import async_playwright
 
+from math import ceil
+
+
+def split_file_for_thr(num: int, url: list) -> list[list]:
+    '''
+    num - число потоков # например 4
+    url - список с url => [...] # 16 штук
+    list[list] - список со списками url => [[...]] # 4 по 4 
+    '''
+    new_url = []
+    step = ceil(len(url)/num)
+    for i in range(0, len(url), step):
+        if i+step > len(url)-1:
+            new_url.append(url[i:])
+        else:
+            new_url.append(url[i:i+step])
+
+    return new_url
 
 def create_params_for_url(param: str):
     if "---" in param:
@@ -54,12 +72,12 @@ ban_list = []
 async def main(brands, nums):   
     global PROXY_LIST, ban_list
 
-    DEEP_FILTER = 10
-    DEEP_ANALOG = 10
+    DEEP_FILTER = 50
+    DEEP_ANALOG = 50
     ANALOG = False
-    IS_BIGGER = None #True - больше False - меньше None - не указано
+    IS_BIGGER = True #True - больше False - меньше None - не указано
     DATE = 5
-    LOGO = "HXAW" #QFPD - пример лого None - Без лого
+    LOGO = "HXAW" #HXAW - пример лого None - Без лого
     
     proxy = PROXY_LIST.pop(0)
     for brand, num in zip(brands, nums):
@@ -162,11 +180,28 @@ async def main(brands, nums):
                 proxy = PROXY_LIST.pop(0)
     PROXY_LIST.append(proxy)
         
+def run(brands, nums):
+    asyncio.run(main(brands, nums))
 
-brands = ["peugeot---citroen", "ГАЗ", "peugeot---citroen", "peugeot---citroen", "peugeot---citroen", "peugeot---citroen", "Mahle---Knecht"] * 3
-nums = ["82026", "6270000290", "00008120T7", "00006426YN", "00004254A2", "362312", "02943N0"] * 3
 
 start = time.perf_counter()
-asyncio.run(main(brands, nums))
+brands = ["peugeot---citroen", "ГАЗ", "peugeot---citroen", "peugeot---citroen", "peugeot---citroen", "peugeot---citroen", "Mahle---Knecht", "VAG", "Autocomponent"] * 3
+nums = ["82026", "6270000290", "00008120T7", "00006426YN", "00004254A2", "362312", "02943N0", "016409399B", "01М21С9"] * 3
+
+brands_split = split_file_for_thr(4, brands)
+nums_split = split_file_for_thr(4, nums)
+
+threadings = []
+for i in range(len(brands_split)):
+    thread = threading.Thread(target=run, args=(brands_split[i], nums_split[i]), name=f"thr-{i}")
+    thread.start()
+    threadings.append(thread)
+
+for thread in threadings:
+    thread.join()
+
 print("Бан лист:", ban_list)
 print(time.perf_counter()-start)
+
+#c лого 27 строк за 168 секунд - 6.22
+#без лого фулл комплектация 27 строк за 15 секунд - 0.56
