@@ -75,10 +75,10 @@ async def main(brands, nums):
 
     DEEP_FILTER = 50
     DEEP_ANALOG = 50
-    ANALOG = True
+    ANALOG = False
     IS_BIGGER = True #True - больше False - меньше None - не указано
     DATE = 5
-    LOGO = None #HXAW - пример лого None - Без лого
+    LOGO = "HXAW" #HXAW - пример лого None - Без лого
     
     if PROXY_LIST != []:
         proxy = PROXY_LIST.pop(0)
@@ -161,13 +161,13 @@ async def main(brands, nums):
                 print(num, result)
                 
                 if LOGO:
-                    final_result = []
-                    cut_data_by_availability = sorted_data_by_date
-                    for data in cut_data_by_availability:
+                    best_data = None
+                    sorted_by_price = quick_sort(originals, 2)
+                    for data in sorted_by_price:
                         try:
                             await page.goto(f"https://emex.ru/api/search/rating?offerKey={data[0]}", timeout=1500)
                         except:
-                            cut_data_by_availability.append(data)
+                            sorted_by_price.append(data)
                             continue
 
                         pre_with_logo = await (await page.query_selector("pre")).text_content()
@@ -176,10 +176,10 @@ async def main(brands, nums):
 
                         data[0] = price_logo
                         if price_logo == LOGO:
-                            final_result.append(data)
+                            best_data = data
+                            break
 
-                    if final_result:
-                        best_data = min(final_result, key=lambda x: x[2])
+                    if best_data:
                         print(num, best_data)
                     else:
                         print(num, "Нет такого лого среди оригиналов")
@@ -246,4 +246,13 @@ print(time.perf_counter()-start)
     #
     # 18 строк за 145.4 секунды
 # -=-=-=-=-
-    # Среднее 1) 0.7 2) 0.61 3) 8.1
+    # DEEP_FILTER = 50
+    # DEEP_ANALOG = 50
+    # ANALOG = False
+    # IS_BIGGER = True #True - больше False - меньше None - не указано
+    # DATE = 5
+    # LOGO = "HXAW" #HXAW - пример лого None - Без лого
+    #
+    # измененный код 18 строк за 84.67 секунды
+# -=-=-=-=-
+    # Среднее 1) 0.70 2) 0.61 3) 8.10 4) 4.70
