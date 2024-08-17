@@ -73,8 +73,8 @@ ban_list = set()
 async def main(brands, nums):   
     global PROXY_LIST, ban_list, len_proxy_list
 
-    DEEP_FILTER = 50
-    DEEP_ANALOG = 50
+    DEEP_FILTER = 10
+    DEEP_ANALOG = 10
     ANALOG = False
     IS_BIGGER = True #True - больше False - меньше None - не указано
     DATE = 5
@@ -199,8 +199,8 @@ def run(brands, nums):
 
 
 start = time.perf_counter()
-brands = ["peugeot---citroen", "ГАЗ", "peugeot---citroen", "peugeot---citroen", "peugeot---citroen", "peugeot---citroen", "Mahle---Knecht", "VAG", "Autocomponent"] * 2
-nums = ["82026", "6270000290", "00008120T7", "00006426YN", "00004254A2", "362312", "02943N0", "016409399B", "01М21С9"] * 2 
+brands = ["peugeot---citroen", "ГАЗ", "peugeot---citroen", "peugeot---citroen", "peugeot---citroen", "peugeot---citroen", "Mahle---Knecht", "VAG", "Autocomponent"] * 1
+nums = ["82026", "6270000290", "00008120T7", "00006426YN", "00004254A2", "362312", "02943N0", "016409399B", "01М21С9"] * 1 
 
 brands_split = split_file_for_thr(4, brands) # 4 - количество потоков
 nums_split = split_file_for_thr(4, nums)
