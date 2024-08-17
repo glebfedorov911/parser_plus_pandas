@@ -8,7 +8,7 @@ from playwright.async_api import async_playwright
 
 from math import ceil
 
-
+#тест гит на ноуте
 def split_file_for_thr(num: int, url: list) -> list[list]:
     '''
     num - число потоков # например 4
