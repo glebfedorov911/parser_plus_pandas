@@ -9,6 +9,7 @@ from playwright.async_api import async_playwright
 
 from math import ceil
 
+<<<<<<< HEAD
 
 def create(df_to_list):
     brands, nums = [], []
@@ -18,6 +19,11 @@ def create(df_to_list):
 
     return brands, nums
 
+=======
+#тест гит на ноуте
+# еще один тест 
+# и еще один
+>>>>>>> 4bd9ddc70f82c7a294c8380a2cec67ca9b375a12
 def split_file_for_thr(num: int, url: list) -> list[list]:
     '''
     num - число потоков # например 4
@@ -84,8 +90,8 @@ columns = ["Артикул", "Номер товара", "Лого", "Доста�
 async def main(brands, nums):   
     global PROXY_LIST, ban_list, len_proxy_list, for_excel_results, columns
 
-    DEEP_FILTER = 50
-    DEEP_ANALOG = 50
+    DEEP_FILTER = 10
+    DEEP_ANALOG = 10
     ANALOG = False
     IS_BIGGER = True #True - больше False - меньше None - не указано
     DATE = 5
@@ -215,6 +221,7 @@ def run(brands, nums):
 
 
 start = time.perf_counter()
+<<<<<<< HEAD
 # brands = ["peugeot---citroen", "ГАЗ", "peugeot---citroen", "peugeot---citroen", "peugeot---citroen", "peugeot---citroen", "Mahle---Knecht", "VAG", "Autocomponent"] * 2
 # nums = ["82026", "6270000290", "00008120T7", "00006426YN", "00004254A2", "362312", "02943N0", "016409399B", "01М21С9"] * 2 
 
@@ -222,6 +229,10 @@ df = pd.read_excel("file.xlsx")
 df = df.apply(lambda col: col.astype(object))
 df_to_list = df.values.tolist()
 brands, nums = create(df_to_list)
+=======
+brands = ["peugeot---citroen", "ГАЗ", "peugeot---citroen", "peugeot---citroen", "peugeot---citroen", "peugeot---citroen", "Mahle---Knecht", "VAG", "Autocomponent"] * 1
+nums = ["82026", "6270000290", "00008120T7", "00006426YN", "00004254A2", "362312", "02943N0", "016409399B", "01М21С9"] * 1 
+>>>>>>> 4bd9ddc70f82c7a294c8380a2cec67ca9b375a12
 
 brands_split = split_file_for_thr(4, brands) # 4 - количество потоков
 nums_split = split_file_for_thr(4, nums)
