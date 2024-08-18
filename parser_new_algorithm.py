@@ -1,13 +1,22 @@
 import threading
 import asyncio
-import urllib.parse as up
 import json
 import time
+import urllib.parse as up
+import pandas as pd
 
 from playwright.async_api import async_playwright
 
 from math import ceil
 
+
+def create(df_to_list):
+    brands, nums = [], []
+    for i in df_to_list:
+        brands.append((df_to_list.index(i), i[2]))
+        nums.append((df_to_list.index(i), i[3]))
+
+    return brands, nums
 
 def split_file_for_thr(num: int, url: list) -> list[list]:
     '''
@@ -69,9 +78,11 @@ PROXY_LIST = [
 
 len_proxy_list = len(PROXY_LIST)
 ban_list = set()
+for_excel_results = []
+columns = ["Артикул", "Номер товара", "Лого", "Доставка", "Лучшая цена", "Количество товара"]
 
 async def main(brands, nums):   
-    global PROXY_LIST, ban_list, len_proxy_list
+    global PROXY_LIST, ban_list, len_proxy_list, for_excel_results, columns
 
     DEEP_FILTER = 50
     DEEP_ANALOG = 50
@@ -79,6 +90,9 @@ async def main(brands, nums):
     IS_BIGGER = True #True - больше False - меньше None - не указано
     DATE = 5
     LOGO = "HXAW" #HXAW - пример лого None - Без лого
+
+    if LOGO and "Цена с лого" not in columns:
+        columns.append("Цена с лого")
     
     if PROXY_LIST != []:
         proxy = PROXY_LIST.pop(0)
@@ -88,8 +102,7 @@ async def main(brands, nums):
         if len_proxy_list == len(ban_list):
             print("Закончились все прокси")
             break
-
-        url = f"https://emex.ru/api/search/search?make={create_params_for_url(brand)}&detailNum={num}&locationId=38760&showAll=true&longitude=37.8613&latitude=55.7434"
+        url = f"https://emex.ru/api/search/search?make={create_params_for_url(brand[1])}&detailNum={num[1]}&locationId=38760&showAll=true&longitude=37.8613&latitude=55.7434"
         async with async_playwright() as p:
             try:
                 browser = await p.chromium.launch(headless=False, proxy={"server": proxy[0], "username": proxy[1], "password": proxy[2]})
@@ -157,8 +170,9 @@ async def main(brands, nums):
                 response_with_logo = dict(json.loads(pre_with_logo))
                 price_logo = response_with_logo["priceLogo"] 
 
-                result = [price_logo, *best_data[1:]]
-                print(num, result)
+                # result = [price_logo, *best_data[1:]]
+                # print(num, result)
+                result = [brand[1], num[1], price_logo, *best_data[1:]]
                 
                 if LOGO:
                     best_data = None
@@ -181,8 +195,10 @@ async def main(brands, nums):
 
                     if best_data:
                         print(num, best_data)
+                        result.append(best_data[2])
                     else:
-                        print(num, "Нет такого лого среди оригиналов")
+                        result.append("Нет такого лого среди оригиналов")
+                for_excel_results.append(result)
             except:
                 brands.append(brand)
                 nums.append(num)
@@ -199,8 +215,13 @@ def run(brands, nums):
 
 
 start = time.perf_counter()
-brands = ["peugeot---citroen", "ГАЗ", "peugeot---citroen", "peugeot---citroen", "peugeot---citroen", "peugeot---citroen", "Mahle---Knecht", "VAG", "Autocomponent"] * 2
-nums = ["82026", "6270000290", "00008120T7", "00006426YN", "00004254A2", "362312", "02943N0", "016409399B", "01М21С9"] * 2 
+# brands = ["peugeot---citroen", "ГАЗ", "peugeot---citroen", "peugeot---citroen", "peugeot---citroen", "peugeot---citroen", "Mahle---Knecht", "VAG", "Autocomponent"] * 2
+# nums = ["82026", "6270000290", "00008120T7", "00006426YN", "00004254A2", "362312", "02943N0", "016409399B", "01М21С9"] * 2 
+
+df = pd.read_excel("file.xlsx")
+df = df.apply(lambda col: col.astype(object))
+df_to_list = df.values.tolist()
+brands, nums = create(df_to_list)
 
 brands_split = split_file_for_thr(4, brands) # 4 - количество потоков
 nums_split = split_file_for_thr(4, nums)
@@ -213,6 +234,9 @@ for i in range(len(brands_split)):
 
 for thread in threadings:
     thread.join()
+
+df = pd.DataFrame(for_excel_results, columns=columns)
+df.to_excel("result.xlsx", index=False)
 
 print("Бан лист:", ban_list)
 print(time.perf_counter()-start)
